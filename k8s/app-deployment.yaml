@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pedelogo-deployment
+  labels:
+    app: pedelogo
+  namespace: pedelogo-catalogo  
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pedelogo
+  template:
+    metadata:
+      labels:
+        app: pedelogo
+    spec:
+      containers:
+      - name: pedelogo
+        image: rafallltm/pedelogo-catalogo:v1
+        ports:
+        - containerPort: 80
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: Mongo__User
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: Mongo__User
+        - name: Mongo__Password
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: Mongo__Password
+        - name: Mongo__DataBase
+          valueFrom:
+            configMapKeyRef:
+              name: mongodb-config
+              key: Mongo__DataBase
+        - name: Mongo__Host
+          value: "mongodb-service"
+        - name: Mongo__Port
+          value: "27017"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pedelogo-service
+  namespace: pedelogo-catalogo 
+spec:
+  selector:
+    app: pedelogo
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+
+
+  

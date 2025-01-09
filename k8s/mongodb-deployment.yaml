@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb-deployment
+  namespace: pedelogo-catalogo  
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: Mongo__User
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: Mongo__Password
+        - name: MONGO_INITDB_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: mongodb-config
+              key: Mongo__DataBase
+        - name: Mongo__Host
+          valueFrom:
+            configMapKeyRef:
+              name: mongodb-config
+              key: Mongo__Host
+        - name: Mongo__Port
+          valueFrom:
+            configMapKeyRef:
+              name: mongodb-config
+              key: Mongo__Port
+        - name: MONGODB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: mongodb-config
+              key: MONGODB_PORT
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service
+  namespace: pedelogo-catalogo   
+spec:
+  selector:
+    app: mongodb
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+  type: ClusterIP
